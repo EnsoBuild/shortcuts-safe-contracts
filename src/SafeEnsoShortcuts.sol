@@ -20,7 +20,7 @@ contract SafeEnsoShortcuts is VM {
         bytes32[] calldata commands,
         bytes[] calldata state
     ) external payable returns (bytes[] memory returnData) {
-        if (address(this) == __self) revert OnlyDelgateCall();
+        if (address(this) == __self) revert OnlyDelegateCall();
         returnData = _execute(commands, state);
         emit ShortcutExecuted(shortcutId);
     }
