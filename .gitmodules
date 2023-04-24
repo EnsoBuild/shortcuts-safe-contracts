@@ -5,3 +5,6 @@
 [submodule "lib/enso-weiroll"]
 	path = lib/enso-weiroll
 	url = ../enso-weiroll.git
+[submodule "lib/safe-tools"]
+	path = lib/safe-tools
+	url = https://github.com/colinnielsen/safe-tools
