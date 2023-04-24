@@ -8,3 +8,6 @@
 [submodule "lib/safe-tools"]
 	path = lib/safe-tools
 	url = https://github.com/colinnielsen/safe-tools
+[submodule "lib/solady"]
+	path = lib/solady
+	url = https://github.com/Vectorized/solady
