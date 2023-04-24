@@ -69,8 +69,8 @@ contract SafeEnsoShortcutsTest is Test, SafeTestTools {
         bytes32[] memory commands = new bytes32[](1);
         commands[0] = WeirollPlanner.buildCommand(
             weth.deposit.selector,
-            0x03, // call
-            0x00ffffffffff, // 2 inputs
+            0x03, // call with value
+            0x00ffffffffff, // 1 input
             0xff, // no output
             address(weth)
         );
