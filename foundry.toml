@@ -14,8 +14,15 @@ gnosis = "${GNOSIS_RPC_URL}"
 avalanche = "${AVALANCHE_RPC_URL}"
 fantom = "${FANTOM_RPC_URL}"
 aurora = "${AURORA_RPC_URL}"
+goerli = "${GOERLI_RPC_URL}"
 
 [etherscan]
 mainnet = { key = "${ETHERSCAN_API_KEY}" }
+arbitrum = { key = "${ARBITRUM_BLOCKSCAN_KEY}" }
+optimism = { key = "${OPTIMISM_BLOCKSCAN_KEY}" }
+polygon = { key = "${POLYGON_BLOCKSCAN_KEY}" }
+bsc = { key = "${BSC_BLOCKSCAN_KEY}" }
+gnosis = { key = "${GNOSIS_BLOCKSCAN_KEY}" }
+avalanche = { key = "${AVALANCHE_BLOCKSCAN_KEY}" }
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
