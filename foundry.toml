@@ -3,7 +3,8 @@ src = 'src'
 out = 'out'
 libs = ['lib']
 via_ir=true
-solc = '0.8.17'
+solc = '0.8.23'
+evm_version = 'paris'
 
 [rpc_endpoints]
 mainnet = "${ETHEREUM_RPC_URL}"
@@ -18,6 +19,7 @@ aurora = "${AURORA_RPC_URL}"
 goerli = "${GOERLI_RPC_URL}"
 base = "${BASE_RPC_URL}"
 linea = "${LINEA_RPC_URL}"
+cartio = "${CARTIO_RPC_URL}"
 
 [etherscan]
 mainnet = { key = "${ETHERSCAN_API_KEY}" }
