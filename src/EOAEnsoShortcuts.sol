@@ -5,22 +5,22 @@ pragma solidity ^0.8.17;
 import {VM} from "enso-weiroll/VM.sol";
 
 contract EOAEnsoShortcuts is VM {
-    event ShortcutExecuted(bytes32 shortcutId);
+    event ShortcutExecuted(bytes32 requestId);
 
     error OnlySelfCall();
 
     // @notice Execute a shortcut on EOA that set this contract as its account code
-    // @param shortcutId The bytes32 value representing a shortcut
+    // @param requestId The bytes32 value representing an API request
     // @param commands An array of bytes32 values that encode calls
     // @param state An array of bytes that are used to generate call data for each command
     function executeShortcut(
-        bytes32 shortcutId,
+        bytes32 requestId,
         bytes32[] calldata commands,
         bytes[] calldata state
     ) external payable returns (bytes[] memory returnData) {
         if (msg.sender != address(this)) revert OnlySelfCall();
         returnData = _execute(commands, state);
-        emit ShortcutExecuted(shortcutId);
+        emit ShortcutExecuted(requestId);
     }
 
     // @notice A function to execute an arbitrary call on another contract
