@@ -15,7 +15,6 @@ contract EOAEnsoShortcuts is VM {
     // @param state An array of bytes that are used to generate call data for each command
     function executeShortcut(bytes32 requestId, bytes32[] calldata commands, bytes[] calldata state)
         external
-        payable
         returns (bytes[] memory returnData)
     {
         if (msg.sender != address(this)) revert OnlySelfCall();
@@ -27,7 +26,7 @@ contract EOAEnsoShortcuts is VM {
     // @param target The address of the target contract
     // @param value The ether value that is to be sent with the call
     // @param data The call data to be sent to the target
-    function execute(address target, uint256 value, bytes memory data) external payable returns (bool success) {
+    function execute(address target, uint256 value, bytes memory data) external returns (bool success) {
         if (msg.sender != address(this)) revert OnlySelfCall();
         assembly {
             success := call(gas(), target, value, add(data, 0x20), mload(data), 0, 0)
