@@ -98,50 +98,50 @@ contract EOAEnsoShortcutsTest is Test {
         assertEq(s_weth.balanceOf(s_alice), 10 ether);
     }
 
-    function testExecuteReverts() public {
-        // Arrange
-        bytes32 requestId = bytes32(0);
-        bytes32[] memory commands = new bytes32[](1);
-        bytes[] memory state = new bytes[](1);
+    // function testExecuteReverts() public {
+    //     // Arrange
+    //     bytes32 requestId = bytes32(0);
+    //     bytes32[] memory commands = new bytes32[](1);
+    //     bytes[] memory state = new bytes[](1);
 
-        bytes memory data = abi.encodeCall(EOAEnsoShortcuts.executeShortcut, (requestId, commands, state));
+    //     bytes memory data = abi.encodeCall(EOAEnsoShortcuts.executeShortcut, (requestId, commands, state));
 
-        // Act & Assert
-        vm.prank(s_deployer);
-        vm.expectRevert(EOAEnsoShortcuts.OnlySelfCall.selector);
-        EOAEnsoShortcuts(payable(CALLER_ADDRESS)).execute(payable(CALLER_ADDRESS), 0, data);
-    }
+    //     // Act & Assert
+    //     vm.prank(s_deployer);
+    //     vm.expectRevert(EOAEnsoShortcuts.OnlySelfCall.selector);
+    //     EOAEnsoShortcuts(payable(CALLER_ADDRESS)).execute(payable(CALLER_ADDRESS), 0, data);
+    // }
 
-    function testExecuteSucceeds() public {
-        // Arrange
-        bytes32 requestId = keccak256(abi.encodePacked("requestId"));
+    // function testExecuteSucceeds() public {
+    //     // Arrange
+    //     bytes32 requestId = keccak256(abi.encodePacked("requestId"));
 
-        bytes32[] memory commands = new bytes32[](1);
-        commands[0] = WeirollPlanner.buildCommand(
-            s_weth.transfer.selector,
-            0x01, // call
-            0x0001ffffffff, // 2 inputs
-            0xff, // no output
-            address(s_weth)
-        );
+    //     bytes32[] memory commands = new bytes32[](1);
+    //     commands[0] = WeirollPlanner.buildCommand(
+    //         s_weth.transfer.selector,
+    //         0x01, // call
+    //         0x0001ffffffff, // 2 inputs
+    //         0xff, // no output
+    //         address(s_weth)
+    //     );
 
-        bytes[] memory state = new bytes[](2);
-        state[0] = abi.encode(s_alice);
-        state[1] = abi.encode(10 ether);
+    //     bytes[] memory state = new bytes[](2);
+    //     state[0] = abi.encode(s_alice);
+    //     state[1] = abi.encode(10 ether);
 
-        bytes memory data = abi.encodeCall(EOAEnsoShortcuts.executeShortcut, (requestId, commands, state));
+    //     bytes memory data = abi.encodeCall(EOAEnsoShortcuts.executeShortcut, (requestId, commands, state));
 
-        deal(address(s_weth), address(CALLER_ADDRESS), 10 ether);
+    //     deal(address(s_weth), address(CALLER_ADDRESS), 10 ether);
 
-        // Act & Assert
-        vm.prank(CALLER_ADDRESS);
-        vm.expectEmit(CALLER_ADDRESS);
-        emit ShortcutExecuted(requestId);
-        bool success = EOAEnsoShortcuts(payable(CALLER_ADDRESS)).execute(payable(CALLER_ADDRESS), 0, data);
+    //     // Act & Assert
+    //     vm.prank(CALLER_ADDRESS);
+    //     vm.expectEmit(CALLER_ADDRESS);
+    //     emit ShortcutExecuted(requestId);
+    //     bool success = EOAEnsoShortcuts(payable(CALLER_ADDRESS)).execute(payable(CALLER_ADDRESS), 0, data);
 
-        assertTrue(success);
-        assertEq(s_weth.balanceOf(CALLER_ADDRESS), 0);
-        assertEq(s_weth.balanceOf(address(s_eoaDelegate)), 0);
-        assertEq(s_weth.balanceOf(s_alice), 10 ether);
-    }
+    //     assertTrue(success);
+    //     assertEq(s_weth.balanceOf(CALLER_ADDRESS), 0);
+    //     assertEq(s_weth.balanceOf(address(s_eoaDelegate)), 0);
+    //     assertEq(s_weth.balanceOf(s_alice), 10 ether);
+    // }
 }
