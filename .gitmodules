@@ -1,7 +1,7 @@
 [submodule "lib/forge-std"]
 	path = lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
-	branch = v1.3.0
+	url = https://github.com/foundry/forge-std
+	branch = v1.9.6
 [submodule "lib/enso-weiroll"]
 	path = lib/enso-weiroll
 	url = ../enso-weiroll.git

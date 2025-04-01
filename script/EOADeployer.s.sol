@@ -4,12 +4,12 @@ pragma solidity ^0.8.13;
 import "forge-std/Script.sol";
 import "../src/EOAEnsoShortcuts.sol";
 
-struct DeployerResult {
+struct EOADeployerResult {
     EOAEnsoShortcuts shortcuts;
 }
 
-contract Deployer is Script {
-    function run() public returns (DeployerResult memory result) {
+contract EOADeployer is Script {
+    function run() public returns (EOADeployerResult memory result) {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
         vm.startBroadcast(deployerPrivateKey);

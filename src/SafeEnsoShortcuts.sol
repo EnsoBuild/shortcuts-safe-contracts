@@ -15,11 +15,11 @@ contract SafeEnsoShortcuts is VM {
     // @param shortcutId The bytes32 value representing a shortcut
     // @param commands An array of bytes32 values that encode calls
     // @param state An array of bytes that are used to generate call data for each command
-    function executeShortcut(
-        bytes32 shortcutId,
-        bytes32[] calldata commands,
-        bytes[] calldata state
-    ) external payable returns (bytes[] memory returnData) {
+    function executeShortcut(bytes32 shortcutId, bytes32[] calldata commands, bytes[] calldata state)
+        external
+        payable
+        returns (bytes[] memory returnData)
+    {
         if (address(this) == __self) revert OnlyDelegateCall();
         returnData = _execute(commands, state);
         emit ShortcutExecuted(shortcutId);

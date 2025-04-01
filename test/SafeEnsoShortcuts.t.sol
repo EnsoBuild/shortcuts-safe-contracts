@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import {Test} from "forge-std/Test.sol";
 import {SafeTestTools, SafeTestLib, SafeInstance, Enum} from "safe-tools/SafeTestTools.sol";
 import {WETH} from "solady/tokens/WETH.sol";
-import {Deployer, DeployerResult} from "../script/Deployer.s.sol";
+import {DelegateDeployer, DelegateDeployerResult} from "../script/DelegateDeployer.s.sol";
 import {SafeEnsoShortcuts} from "../src/SafeEnsoShortcuts.sol";
 import {WeirollPlanner} from "./utils/WeirollPlanner.sol";
 
@@ -21,7 +21,7 @@ contract SafeEnsoShortcutsTest is Test, SafeTestTools {
         address deployer = vm.addr(vm.envUint("PRIVATE_KEY"));
         deal(deployer, 1 ether);
 
-        DeployerResult memory result = new Deployer().run();
+        DelegateDeployerResult memory result = new DelegateDeployer().run();
 
         shortcuts = result.shortcuts;
 
