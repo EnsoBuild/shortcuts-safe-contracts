@@ -8,6 +8,7 @@ import {EOAEnsoShortcuts} from "../src/EOAEnsoShortcuts.sol";
 import {WeirollPlanner} from "./utils/WeirollPlanner.sol";
 
 contract EOAEnsoShortcutsTest is Test {
+    bytes3 private constant PREFIX = 0xef0100;
     address private constant CALLER_ADDRESS = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
     uint256 private constant CALLER_PK = 0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a;
 
@@ -30,12 +31,27 @@ contract EOAEnsoShortcutsTest is Test {
 
         s_weth = new WETH();
 
+        assertTrue(CALLER_ADDRESS.code.length == 0);
         vm.signAndAttachDelegation(address(s_eoaDelegate), CALLER_PK);
     }
 
     function testEOAHasDelegateCode() public view {
-        // Act & Assert
-        assertTrue(CALLER_ADDRESS.code.length > 0);
+        // Arrange
+        bytes memory expectedCode = abi.encodePacked(PREFIX, address(s_eoaDelegate));
+
+        // Assert
+        assertEq(CALLER_ADDRESS.code, expectedCode);
+    }
+
+    function testEOACanClearDelegateCode() public {
+        // Arrange
+        bytes memory expectedCode = abi.encodePacked(PREFIX, address(s_eoaDelegate));
+
+        // Act
+        vm.signAndAttachDelegation(address(0), CALLER_PK);
+
+        // Assert
+        assertNotEq(CALLER_ADDRESS.code, expectedCode);
     }
 
     function testExecuteShortcutReverts() public {
