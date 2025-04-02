@@ -5,13 +5,13 @@ import {Test} from "forge-std/Test.sol";
 import {SafeTestTools, SafeTestLib, SafeInstance, Enum} from "safe-tools/SafeTestTools.sol";
 import {WETH} from "solady/tokens/WETH.sol";
 import {DelegateDeployer, DelegateDeployerResult} from "../script/DelegateDeployer.s.sol";
-import {SafeEnsoShortcuts} from "../src/SafeEnsoShortcuts.sol";
+import {DelegateEnsoShortcuts} from "../src/delegate/DelegateEnsoShortcuts.sol";
 import {WeirollPlanner} from "./utils/WeirollPlanner.sol";
 
-contract SafeEnsoShortcutsTest is Test, SafeTestTools {
+contract DelegateEnsoShortcutsTest is Test, SafeTestTools {
     using SafeTestLib for SafeInstance;
 
-    SafeEnsoShortcuts shortcuts;
+    DelegateEnsoShortcuts shortcuts;
     SafeInstance safeInstance;
     WETH weth;
 
@@ -44,7 +44,7 @@ contract SafeEnsoShortcutsTest is Test, SafeTestTools {
         state[0] = abi.encode(alice);
         state[1] = abi.encode(10 ether);
 
-        bytes memory data = abi.encodeCall(SafeEnsoShortcuts.executeShortcut, (bytes32(0), commands, state));
+        bytes memory data = abi.encodeCall(DelegateEnsoShortcuts.executeShortcut, (bytes32(0), bytes32(0), commands, state));
 
         assertEq(weth.balanceOf(address(safeInstance.safe)), 0);
         assertEq(weth.balanceOf(alice), 0);
@@ -78,7 +78,7 @@ contract SafeEnsoShortcutsTest is Test, SafeTestTools {
         bytes[] memory state = new bytes[](1);
         state[0] = abi.encode(10 ether);
 
-        bytes memory data = abi.encodeCall(SafeEnsoShortcuts.executeShortcut, (bytes32(0), commands, state));
+        bytes memory data = abi.encodeCall(DelegateEnsoShortcuts.executeShortcut, (bytes32(0), bytes32(0), commands, state));
 
         uint256 safeBalanceBefore = address(safeInstance.safe).balance;
         assertEq(weth.balanceOf(address(safeInstance.safe)), 0);

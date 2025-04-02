@@ -2,8 +2,10 @@
 pragma solidity ^0.8.24;
 
 import { VM } from "enso-weiroll/VM.sol";
+import { ERC721Holder } from "openzeppelin-contracts/token/ERC721/utils/ERC721Holder.sol";
+import { ERC1155Holder } from "openzeppelin-contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
-contract EnsoShortcuts is VM {
+contract EnsoShortcuts is VM, ERC721Holder, ERC1155Holder {
     address public executor;
 
     error NotPermitted();
@@ -22,4 +24,6 @@ contract EnsoShortcuts is VM {
         if (msg.sender != executor) revert NotPermitted();
         return _execute(commands, state);
     }
+
+    receive() external payable {}
 }

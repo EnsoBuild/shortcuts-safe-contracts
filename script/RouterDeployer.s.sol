@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Script.sol";
-import "../src/EnsoShortcutRouter.sol";
+import "../src/router/EnsoShortcutRouter.sol";
 
 struct DeployerResult {
     EnsoShortcutRouter router;

@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {BaseSolver} from "./BaseSolver.sol";
 
 contract BebopSolver is BaseSolver {
-    address private immutable relayer;
+    address public immutable relayer;
 
     // @dev Constructor for the `BebopSolver` contract.
     // @param _owner The address of the owner who will be assigned the `OWNER_ROLE`. This parameter cannot be null.

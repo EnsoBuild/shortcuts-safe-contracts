@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import {Test} from "forge-std/Test.sol";
 import {WETH} from "solady/tokens/WETH.sol";
 import {EOADeployer, EOADeployerResult} from "../script/EOADeployer.s.sol";
-import {EOAEnsoShortcuts} from "../src/EOAEnsoShortcuts.sol";
+import {EOAEnsoShortcuts} from "../src/delegate/EOAEnsoShortcuts.sol";
 import {WeirollPlanner} from "./utils/WeirollPlanner.sol";
 
 contract EOAEnsoShortcutsTest is Test {
@@ -51,7 +51,7 @@ contract EOAEnsoShortcutsTest is Test {
         vm.signAndAttachDelegation(address(0), CALLER_PK);
 
         // Assert
-        assertNotEq(CALLER_ADDRESS.code, expectedCode);
+        vm.assertNotEq(CALLER_ADDRESS.code, expectedCode);
     }
 
     function testExecuteShortcutReverts() public {

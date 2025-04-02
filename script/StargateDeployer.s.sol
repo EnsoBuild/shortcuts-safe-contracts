@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Script.sol";
-import "../src/StargateV2Receiver.sol";
+import "../src/bridge/StargateV2Receiver.sol";
 
 contract StargateDeployer is Script {
     function run() public returns (address stargateHelper) {

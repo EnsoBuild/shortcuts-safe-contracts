@@ -2,11 +2,10 @@
 pragma solidity ^0.8.24;
 
 import {VM} from "enso-weiroll/VM.sol";
-import {MinimalWallet} from "shortcuts-contracts/wallet/MinimalWallet.sol";
-import {AccessController} from "shortcuts-contracts/access/AccessController.sol";
+import {MinimalWallet} from "./MinimalWallet.sol";
 
-contract BaseSolver is VM, MinimalWallet, AccessController {
-    address private immutable executor;
+contract BaseSolver is VM, MinimalWallet {
+    address public immutable executor;
 
     // @dev Event emitted when a new request is made, uniquely identified by its `id`.
     // @param id A `bytes32` value that uniquely identifies a specific request.
@@ -15,8 +14,7 @@ contract BaseSolver is VM, MinimalWallet, AccessController {
     // @dev Constructor for the `BaseSolver` contract.
     // @param _owner The address of the owner who will be assigned the `OWNER_ROLE`. This parameter cannot be null.
     // @param _executor The address of the executor contract that interacts with this contract.
-    constructor(address _owner, address _executor) {
-        _setPermission(OWNER_ROLE, _owner, true);
+    constructor(address _owner, address _executor) MinimalWallet(_owner)  {
         if (_executor == address(0)) {
             revert NotPermitted();
         }
@@ -32,8 +30,6 @@ contract BaseSolver is VM, MinimalWallet, AccessController {
         bytes32[] calldata commands,
         bytes[] calldata state
     ) public payable virtual returns (bytes[] memory response) {
-        // we could use the AccessController here to check if the msg.sender is the executor address
-        // but as it's a hot path we do a less gas intensive check
         if (msg.sender != executor) {
             revert NotPermitted();
         }

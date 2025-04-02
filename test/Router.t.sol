@@ -2,7 +2,7 @@
 pragma solidity ^0.8.10;
 
 import "../lib/forge-std/src/Test.sol";
-import "../src/EnsoShortcutRouter.sol";
+import "../src/router/EnsoShortcutRouter.sol";
 import "./mocks/MockERC20.sol";
 import "./mocks/MockVault.sol";
 import "./utils/WeirollPlanner.sol";
@@ -22,7 +22,7 @@ contract RouterTest is Test {
     function setUp() public {
         _ethereumFork = vm.createFork(_rpcURL);
         vm.selectFork(_ethereumFork);
-        router = new EnsoShortcutRouter(address(this));
+        router = new EnsoShortcutRouter();
         token = new MockERC20("Test", "TST");
         vault = new MockVault("Vault", "VLT", address(token));
         token.mint(address(this), AMOUNT * 10);
@@ -64,7 +64,7 @@ contract RouterTest is Test {
         state[1] = abi.encode(AMOUNT);
         state[2] = abi.encode(address(this));
 
-        router.safeRouteSingle(token, vault, AMOUNT, AMOUNT, address(this), commands, state);
+        router.safeRouteSingle(bytes32(0), bytes32(0), token, vault, AMOUNT, AMOUNT, address(this), commands, state);
         assertEq(AMOUNT, vault.balanceOf(address(this)));
     }
 
@@ -102,7 +102,7 @@ contract RouterTest is Test {
         state[1] = abi.encode(AMOUNT);
         state[2] = abi.encode(address(this));
 
-        router.safeRouteSingle(token, vault, AMOUNT, AMOUNT, address(this), commands, state);
+        router.safeRouteSingle(bytes32(0), bytes32(0), token, vault, AMOUNT, AMOUNT, address(this), commands, state);
     }
 
     function testFailVaultDepositNoTransfer() public {
@@ -133,7 +133,7 @@ contract RouterTest is Test {
         state[0] = abi.encode(address(vault));
         state[1] = abi.encode(AMOUNT);
 
-        router.safeRouteSingle(token, vault, AMOUNT, AMOUNT, address(this), commands, state);
+        router.safeRouteSingle(bytes32(0), bytes32(0), token, vault, AMOUNT, AMOUNT, address(this), commands, state);
     }
 
     function testUnsafeVaultDepositNoTransfer() public {
@@ -164,7 +164,7 @@ contract RouterTest is Test {
         state[0] = abi.encode(address(vault));
         state[1] = abi.encode(AMOUNT);
 
-        router.routeSingle(token, AMOUNT, commands, state);
+        router.routeSingle(bytes32(0), bytes32(0), token, AMOUNT, commands, state);
         // Funds left in router's wallet!
         assertEq(AMOUNT, vault.balanceOf(address(router.enso())));
     }
@@ -209,7 +209,7 @@ contract RouterTest is Test {
         tokensIn[0] = Token(token, AMOUNT);
         tokensIn[1] = Token(IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE), 1);
 
-        router.routeMulti{ value: 1 }(tokensIn, commands, state);
+        router.routeMulti{ value: 1 }(bytes32(0), bytes32(0), tokensIn, commands, state);
         assertEq(AMOUNT, vault.balanceOf(address(this)));
     }
 
@@ -256,7 +256,7 @@ contract RouterTest is Test {
         Token[] memory tokensOut = new Token[](1);
         tokensOut[0] = Token(IERC20(address(vault)), AMOUNT);
 
-        router.safeRouteMulti{ value: 1 }(tokensIn, tokensOut, address(this), commands, state);
+        router.safeRouteMulti{ value: 1 }(bytes32(0), bytes32(0), tokensIn, tokensOut, address(this), commands, state);
         assertEq(AMOUNT, vault.balanceOf(address(this)));
     }
 }

@@ -8,7 +8,7 @@ import "../src/helpers/ERC20Helpers.sol";
 import "../src/helpers/MathHelpers.sol";
 import "../src/helpers/PercentageMathHelpers.sol";
 import "../src/helpers/SignedMathHelpers.sol";
-import "../src/helpers/SwapHelpers.sol";
+import {SwapHelpers} from "../src/helpers/SwapHelpers.sol";
 import "../src/helpers/TupleHelpers.sol";
 
 struct DeployerResult {
