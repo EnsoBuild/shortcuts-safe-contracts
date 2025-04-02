@@ -2,13 +2,13 @@
 pragma solidity ^0.8.28;
 
 import "../lib/forge-std/src/Test.sol";
-import "../src/router/EnsoShortcutRouter.sol";
+import "../src/router/EnsoRouter.sol";
 import "./mocks/MockERC20.sol";
 import "./mocks/MockVault.sol";
 import "./utils/WeirollPlanner.sol";
 
 contract RouterTest is Test {
-    EnsoShortcutRouter public router;
+    EnsoRouter public router;
     MockERC20 public token;
     MockVault public vault;
 
@@ -22,7 +22,7 @@ contract RouterTest is Test {
     function setUp() public {
         _ethereumFork = vm.createFork(_rpcURL);
         vm.selectFork(_ethereumFork);
-        router = new EnsoShortcutRouter();
+        router = new EnsoRouter();
         token = new MockERC20("Test", "TST");
         vault = new MockVault("Vault", "VLT", address(token));
         token.mint(address(this), AMOUNT * 10);

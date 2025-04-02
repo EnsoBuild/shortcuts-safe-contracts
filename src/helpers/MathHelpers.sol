@@ -9,7 +9,7 @@ pragma solidity ^0.8.28;
  * - utils/math/SafeMath.sol (https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/math/SafeMath.sol)
  */
 contract MathHelpers {
-    uint256 public constant VERSION = 1;
+    uint256 public constant VERSION = 2;
 
     /**
      * @dev Returns the largest of two numbers.
@@ -87,6 +87,20 @@ contract MathHelpers {
      */
     function div(uint256 a, uint256 b) external pure returns (uint256) {
         return a / b;
+    }
+
+    /**
+     * @dev Returns the sum of an array of unsigned integers.
+     * 
+     * Requirements:
+     *
+     * - Addition cannot overflow.
+     */
+    function sum(uint256[] memory values) external pure returns (uint256 total) {
+        uint256 length = values.length;
+        for (uint256 i = 0; i < length; ++i) {
+            total += values[i];
+        }
     }
 
     /**

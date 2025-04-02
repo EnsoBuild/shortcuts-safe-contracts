@@ -38,7 +38,7 @@ contract FullDeploy is Script {
         result.delegate = new DelegateEnsoShortcuts{salt: "DelegateEnsoShortcuts"}();
 
         result.decimalHelpers = new DecimalHelpers{salt: "DecimalHelpers"}();
-        result.ensoShortcutsHelpers = new EnsoShortcutsHelpers{salt: "EnsoShortcutsHelpers"}();
+        result.shortcutsHelpers = new EnsoShortcutsHelpers{salt: "EnsoShortcutsHelpers"}();
         result.erc20Helpers = new ERC20Helpers{salt: "ERC20Helpers"}();
         result.mathHelpers = new MathHelpers{salt: "MathHelpers"}();
         result.percentageMathHelpers = new PercentageMathHelpers{salt: "PercentageMathHelpers"}();

@@ -9,7 +9,7 @@ import { SafeERC20, IERC20 } from "openzeppelin-contracts/token/ERC20/utils/Safe
 contract SwapHelpers {
     using SafeERC20 for IERC20;
 
-    uint256 public constant VERSION = 4;
+    uint256 public constant VERSION = 5;
     IERC20 private constant _ETH = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     error IncorrectValue(uint256 expected, uint256 actual);
@@ -17,20 +17,21 @@ contract SwapHelpers {
 
     function swap(
         address primary,
+        address operator,
         IERC20 tokenIn,
         IERC20 tokenOut,
         uint256 amountIn,
         address receiver,
         bytes memory data,        
         uint256[] memory pointers
-    ) external payable returns (bytes memory) {
+    ) public payable returns (bytes memory) {
         if (pointers.length != 0) insertAmount(data, pointers, amountIn);
         if (tokenIn == _ETH) {
             if (msg.value != amountIn) revert IncorrectValue(amountIn, msg.value);
         } else {
             if (msg.value != 0) revert IncorrectValue(0, msg.value);
             tokenIn.safeTransferFrom(msg.sender, address(this), amountIn);
-            tokenIn.forceApprove(primary, amountIn);
+            tokenIn.forceApprove(operator, amountIn);
         }
         (bool success, bytes memory response) = primary.call{ value: msg.value }(data);
         if (!success) {
@@ -45,6 +46,18 @@ contract SwapHelpers {
             tokenOut.safeTransfer(receiver, tokenOut.balanceOf(address(this)));
         }
         return response;
+    }
+
+    function swap(
+        address primary,
+        IERC20 tokenIn,
+        IERC20 tokenOut,
+        uint256 amountIn,
+        address receiver,
+        bytes memory data,        
+        uint256[] memory pointers
+    ) external payable returns (bytes memory) {
+        return swap(primary, primary, tokenIn, tokenOut, amountIn, receiver, data, pointers);
     }
 
     function insertAmount(

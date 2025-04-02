@@ -23,7 +23,7 @@ contract DelegateEnsoShortcutsTest is Test, SafeTestTools {
 
         DelegateDeployerResult memory result = new DelegateDeployer().run();
 
-        shortcuts = result.shortcuts;
+        shortcuts = result.delegate;
 
         safeInstance = _setupSafe();
 
