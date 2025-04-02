@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import "forge-std/Script.sol";
+import "../src/router/EnsoRouter.sol";
+import "../src/delegate/DelegateEnsoShortcuts.sol";
 import "../src/helpers/DecimalHelpers.sol";
 import "../src/helpers/EnsoShortcutsHelpers.sol";
 import "../src/helpers/ERC20Helpers.sol";
@@ -12,6 +14,9 @@ import {SwapHelpers} from "../src/helpers/SwapHelpers.sol";
 import "../src/helpers/TupleHelpers.sol";
 
 struct DeployerResult {
+    EnsoRouter router;
+    EnsoShortcuts shortcuts;
+    DelegateEnsoShortcuts delegate;
     DecimalHelpers decimalHelpers;
     EnsoShortcutsHelpers ensoShortcutsHelpers;
     ERC20Helpers erc20Helpers;
@@ -27,6 +32,10 @@ contract FullDeploy is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
         vm.startBroadcast(deployerPrivateKey);
+
+        result.router = new EnsoRouter{salt: "EnsoRouter"}();
+        result.shortcuts = result.router.enso();
+        result.shortcuts = new DelegateEnsoShortcuts{salt: "DelegateEnsoShortcuts"}();
 
         result.decimalHelpers = new DecimalHelpers{salt: "DecimalHelpers"}();
         result.ensoShortcutsHelpers = new EnsoShortcutsHelpers{salt: "EnsoShortcutsHelpers"}();

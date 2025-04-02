@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.28;
 
 import "../lib/forge-std/src/Test.sol";
 import "../src/router/EnsoShortcutRouter.sol";
@@ -68,7 +68,7 @@ contract RouterTest is Test {
         assertEq(AMOUNT, vault.balanceOf(address(this)));
     }
 
-    function testFailVaultDepositNoApproval() public {
+    function test_RevertWhen_VaultDepositNoApproval() public {
         vm.selectFork(_ethereumFork);
 
         bytes32[] memory commands = new bytes32[](3);
@@ -101,11 +101,12 @@ contract RouterTest is Test {
         state[0] = abi.encode(address(vault));
         state[1] = abi.encode(AMOUNT);
         state[2] = abi.encode(address(this));
-
+        
+        vm.expectRevert();
         router.safeRouteSingle(bytes32(0), bytes32(0), token, vault, AMOUNT, AMOUNT, address(this), commands, state);
     }
 
-    function testFailVaultDepositNoTransfer() public {
+    function test_RevertWhen_VaultDepositNoTransfer() public {
         vm.selectFork(_ethereumFork);
 
         token.approve(address(router), AMOUNT);
@@ -133,6 +134,7 @@ contract RouterTest is Test {
         state[0] = abi.encode(address(vault));
         state[1] = abi.encode(AMOUNT);
 
+        vm.expectRevert();
         router.safeRouteSingle(bytes32(0), bytes32(0), token, vault, AMOUNT, AMOUNT, address(this), commands, state);
     }
 

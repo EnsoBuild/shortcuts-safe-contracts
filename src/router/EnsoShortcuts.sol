@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.28;
 
 import { VM } from "enso-weiroll/VM.sol";
 import { ERC721Holder } from "openzeppelin-contracts/token/ERC721/utils/ERC721Holder.sol";
