@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-only
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.28;
 
 import "forge-std/Script.sol";
 import "../src/delegate/DelegateEnsoShortcuts.sol";
 
 struct DelegateDeployerResult {
-    DelegateEnsoShortcuts shortcuts;
+    DelegateEnsoShortcuts delegate;
 }
 
 contract DelegateDeployer is Script {
@@ -14,7 +14,7 @@ contract DelegateDeployer is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        result.shortcuts = new DelegateEnsoShortcuts{salt: "DelegateEnsoShortcuts"}();
+        result.delegate = new DelegateEnsoShortcuts{salt: "DelegateEnsoShortcuts"}();
 
         vm.stopBroadcast();
     }

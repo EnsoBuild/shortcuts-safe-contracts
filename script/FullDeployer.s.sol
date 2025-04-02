@@ -6,7 +6,7 @@ import "../src/router/EnsoRouter.sol";
 import "../src/delegate/DelegateEnsoShortcuts.sol";
 import "../src/helpers/DecimalHelpers.sol";
 import "../src/helpers/EnsoShortcutsHelpers.sol";
-import "../src/helpers/ERC20Helpers.sol";
+import {ERC20Helpers} from "../src/helpers/ERC20Helpers.sol";
 import "../src/helpers/MathHelpers.sol";
 import "../src/helpers/PercentageMathHelpers.sol";
 import "../src/helpers/SignedMathHelpers.sol";
@@ -18,7 +18,7 @@ struct DeployerResult {
     EnsoShortcuts shortcuts;
     DelegateEnsoShortcuts delegate;
     DecimalHelpers decimalHelpers;
-    EnsoShortcutsHelpers ensoShortcutsHelpers;
+    EnsoShortcutsHelpers shortcutsHelpers;
     ERC20Helpers erc20Helpers;
     MathHelpers mathHelpers;
     PercentageMathHelpers percentageMathHelpers;
@@ -35,7 +35,7 @@ contract FullDeploy is Script {
 
         result.router = new EnsoRouter{salt: "EnsoRouter"}();
         result.shortcuts = result.router.enso();
-        result.shortcuts = new DelegateEnsoShortcuts{salt: "DelegateEnsoShortcuts"}();
+        result.delegate = new DelegateEnsoShortcuts{salt: "DelegateEnsoShortcuts"}();
 
         result.decimalHelpers = new DecimalHelpers{salt: "DecimalHelpers"}();
         result.ensoShortcutsHelpers = new EnsoShortcutsHelpers{salt: "EnsoShortcutsHelpers"}();

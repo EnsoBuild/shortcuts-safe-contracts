@@ -19,7 +19,7 @@ contract Deployer is Script {
 
         result.router = new EnsoRouter{salt: "EnsoRouter"}();
         result.shortcuts = result.router.enso();
-        result.shortcuts = new DelegateEnsoShortcuts{salt: "DelegateEnsoShortcuts"}();
+        result.delegate = new DelegateEnsoShortcuts{salt: "DelegateEnsoShortcuts"}();
 
         vm.stopBroadcast();
     }
