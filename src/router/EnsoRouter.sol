@@ -24,7 +24,6 @@ contract EnsoRouter {
     error AmountTooLow(Token token);
     error Duplicate();
 
-
     // @notice Route a single token via a call to an external contract
     // @param tokenIn The encoded data for the token to send
     // @param target The address of the target contract
@@ -34,7 +33,8 @@ contract EnsoRouter {
         address target,
         bytes calldata data
     ) public payable returns (bytes memory response) {
-        _transfer(tokenIn, target);
+        bool isNativeAsset = _transfer(tokenIn, target);
+        if (!isNativeAsset && msg.value != 0) revert WrongValue(msg.value, 0);
         response = _execute(target, msg.value, data);
     }
 
