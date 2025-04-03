@@ -16,7 +16,7 @@ contract MockVault is ERC20 {
         _mint(msg.sender, amount);
     }
 
-    function withdraw(uint256 amount) public {
+    function redeem(uint256 amount) public {
         if (amount > balanceOf(msg.sender)) revert();
         _burn(msg.sender, amount);
         token.transfer(msg.sender, amount);
