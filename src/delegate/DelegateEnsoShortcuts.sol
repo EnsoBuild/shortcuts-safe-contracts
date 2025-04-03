@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: GPL-3.0-only
+pragma solidity ^0.8.28;
+
+import { AbstractEnsoShortcuts } from "../AbstractEnsoShortcuts.sol";
+
+contract DelegateEnsoShortcuts is AbstractEnsoShortcuts {
+    address private immutable __self = address(this);
+
+    error OnlyDelegateCall();
+    
+    function _checkMsgSender() internal override view {
+        if (msg.sender == __self) revert OnlyDelegateCall();
+    }
+}

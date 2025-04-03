@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-only
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 import {WETH} from "solady/tokens/WETH.sol";
 import {EOADeployer, EOADeployerResult} from "../script/EOADeployer.s.sol";
-import {EOAEnsoShortcuts} from "../src/EOAEnsoShortcuts.sol";
+import {EOAEnsoShortcuts} from "../src/delegate/EOAEnsoShortcuts.sol";
 import {WeirollPlanner} from "./utils/WeirollPlanner.sol";
 
 contract EOAEnsoShortcutsTest is Test {
@@ -17,7 +17,7 @@ contract EOAEnsoShortcutsTest is Test {
     EOAEnsoShortcuts private s_eoaDelegate;
     WETH private s_weth;
 
-    event ShortcutExecuted(bytes32 requestId);
+    event ShortcutExecuted(bytes32 accountId, bytes32 requestId);
 
     function setUp() public {
         s_deployer = address(0);
@@ -51,11 +51,12 @@ contract EOAEnsoShortcutsTest is Test {
         vm.signAndAttachDelegation(address(0), CALLER_PK);
 
         // Assert
-        assertNotEq(CALLER_ADDRESS.code, expectedCode);
+        vm.assertNotEq(CALLER_ADDRESS.code, expectedCode);
     }
 
     function testExecuteShortcutReverts() public {
         // Arrange
+        bytes32 accountId = bytes32(0);
         bytes32 requestId = bytes32(0);
         bytes32[] memory commands = new bytes32[](1);
         bytes[] memory state = new bytes[](1);
@@ -63,11 +64,12 @@ contract EOAEnsoShortcutsTest is Test {
         // Act & Assert
         vm.prank(s_deployer);
         vm.expectRevert(EOAEnsoShortcuts.OnlySelfCall.selector);
-        EOAEnsoShortcuts(payable(CALLER_ADDRESS)).executeShortcut(requestId, commands, state);
+        EOAEnsoShortcuts(payable(CALLER_ADDRESS)).executeShortcut(accountId, requestId, commands, state);
     }
 
     function testExecuteShortcutSucceeds() public {
         // Arrange
+        bytes32 accountId = bytes32(0);
         bytes32 requestId = keccak256(abi.encodePacked("requestId"));
 
         bytes32[] memory commands = new bytes32[](1);
@@ -88,9 +90,9 @@ contract EOAEnsoShortcutsTest is Test {
         // Act & Assert
         vm.prank(CALLER_ADDRESS);
         vm.expectEmit(CALLER_ADDRESS);
-        emit ShortcutExecuted(requestId);
+        emit ShortcutExecuted(accountId, requestId);
         bytes[] memory returnData =
-            EOAEnsoShortcuts(payable(CALLER_ADDRESS)).executeShortcut(requestId, commands, state);
+            EOAEnsoShortcuts(payable(CALLER_ADDRESS)).executeShortcut(accountId, requestId, commands, state);
 
         assertTrue(returnData.length > 0);
         assertEq(s_weth.balanceOf(CALLER_ADDRESS), 0);
@@ -100,20 +102,20 @@ contract EOAEnsoShortcutsTest is Test {
 
     function testExecuteReverts() public {
         // Arrange
+        bytes32 accountId = bytes32(0);
         bytes32 requestId = bytes32(0);
         bytes32[] memory commands = new bytes32[](1);
         bytes[] memory state = new bytes[](1);
 
-        bytes memory data = abi.encodeCall(EOAEnsoShortcuts.executeShortcut, (requestId, commands, state));
-
         // Act & Assert
         vm.prank(s_deployer);
         vm.expectRevert(EOAEnsoShortcuts.OnlySelfCall.selector);
-        EOAEnsoShortcuts(payable(CALLER_ADDRESS)).execute(payable(CALLER_ADDRESS), 0, data);
+        EOAEnsoShortcuts(payable(CALLER_ADDRESS)).executeShortcut(accountId, requestId, commands, state);
     }
 
     function testExecuteSucceeds() public {
         // Arrange
+        bytes32 accountId = bytes32(0);
         bytes32 requestId = keccak256(abi.encodePacked("requestId"));
 
         bytes32[] memory commands = new bytes32[](1);
@@ -129,17 +131,16 @@ contract EOAEnsoShortcutsTest is Test {
         state[0] = abi.encode(s_alice);
         state[1] = abi.encode(10 ether);
 
-        bytes memory data = abi.encodeCall(EOAEnsoShortcuts.executeShortcut, (requestId, commands, state));
-
         deal(address(s_weth), address(CALLER_ADDRESS), 10 ether);
 
         // Act & Assert
         vm.prank(CALLER_ADDRESS);
         vm.expectEmit(CALLER_ADDRESS);
-        emit ShortcutExecuted(requestId);
-        bool success = EOAEnsoShortcuts(payable(CALLER_ADDRESS)).execute(payable(CALLER_ADDRESS), 0, data);
+        emit ShortcutExecuted(accountId, requestId);
+        bytes[] memory returnData =
+            EOAEnsoShortcuts(payable(CALLER_ADDRESS)).executeShortcut(accountId, requestId, commands, state);
 
-        assertTrue(success);
+        assertTrue(returnData.length > 0);
         assertEq(s_weth.balanceOf(CALLER_ADDRESS), 0);
         assertEq(s_weth.balanceOf(address(s_eoaDelegate)), 0);
         assertEq(s_weth.balanceOf(s_alice), 10 ether);

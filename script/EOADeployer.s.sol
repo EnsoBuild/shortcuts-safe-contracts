@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.28;
 
 import "forge-std/Script.sol";
-import "../src/EOAEnsoShortcuts.sol";
+import "../src/delegate/EOAEnsoShortcuts.sol";
 
 struct EOADeployerResult {
     EOAEnsoShortcuts shortcuts;

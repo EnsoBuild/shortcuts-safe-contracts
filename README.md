@@ -1,6 +1,6 @@
-# Enso Shortcuts Safe Contracts
+# Enso Shortcuts Client Contracts
 
-Small contract to allow [Safes](https://safe.global/) to run Enso Shortcuts.
+Client contracts for running Enso Shortcuts.
 
 ## Install
 
