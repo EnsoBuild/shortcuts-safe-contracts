@@ -2,44 +2,44 @@
 pragma solidity ^0.8.28;
 
 import { SafeERC20, IERC20 } from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
+import { IERC721 } from "openzeppelin-contracts/token/ERC721/IERC721.sol";
+import { IERC1155 } from "openzeppelin-contracts/token/ERC1155/IERC1155.sol";
+
+enum TokenType {
+    Native,
+    ERC20,
+    ERC721,
+    ERC1155
+}
 
 struct Token {
-    IERC20 token;
-    uint256 amount;
+    TokenType tokenType;
+    bytes data;
 }
 
 contract EnsoRouter {
     using SafeERC20 for IERC20;
 
-    IERC20 private constant _ETH = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
-
     error WrongValue(uint256 value, uint256 amount);
-    error AmountTooLow(address token);
-    error Duplicate(address token);
+    error AmountTooLow(Token token);
+    error Duplicate();
 
 
     // @notice Route a single token via a call to an external contract
-    // @param tokenIn The address of the token to send
-    // @param amountIn The amount of the token to send
+    // @param tokenIn The encoded data for the token to send
     // @param target The address of the target contract
     // @param data The call data to be sent to the target
     function routeSingle(
-        IERC20 tokenIn,
-        uint256 amountIn,
+        Token calldata tokenIn,
         address target,
         bytes calldata data
     ) public payable returns (bytes memory response) {
-        if (tokenIn == _ETH) {
-            if (msg.value != amountIn) revert WrongValue(msg.value, amountIn);
-        } else {
-            if (msg.value != 0) revert WrongValue(msg.value, 0);
-            tokenIn.safeTransferFrom(msg.sender, target, amountIn);
-        }
+        _transfer(tokenIn, target);
         response = _execute(target, msg.value, data);
     }
 
     // @notice Route multiple tokens via a call to an external contract
-    // @param tokensIn The addresses and amounts of the tokens to send
+    // @param tokensIn The encoded data for the tokens to send
     // @param target The address of the target contract
     // @param data The call data to be sent to the target
     function routeMulti(
@@ -47,56 +47,41 @@ contract EnsoRouter {
         address target,
         bytes calldata data
     ) public payable returns (bytes memory response) {
-        bool ethFlag;
-        IERC20 tokenIn;
-        uint256 amountIn;
-        for (uint256 i; i < tokensIn.length; ++i) {
-            tokenIn = tokensIn[i].token;
-            amountIn = tokensIn[i].amount;
-            if (tokenIn == _ETH) {
-                if (ethFlag) revert Duplicate(address(_ETH));
-                ethFlag = true;
-                if (msg.value != amountIn) revert WrongValue(msg.value, amountIn);
-            } else {
-                tokenIn.safeTransferFrom(msg.sender, target, amountIn);
+        uint256 length = tokensIn.length;
+
+        bool isNativeAsset;
+        for (uint256 i; i < length; ++i) {
+            if (_transfer(tokensIn[i], target)) {
+                if (isNativeAsset) revert Duplicate(); // Native asset can only be included once
+                isNativeAsset = true;
             }
         }
-        if (!ethFlag && msg.value != 0) revert WrongValue(msg.value, 0);
+        if (!isNativeAsset && msg.value != 0) revert WrongValue(msg.value, 0);
         
         response = _execute(target, msg.value, data);
     }
 
     // @notice Route a single token via a call to an external contract and revert if there is insufficient token received
-    // @param tokenIn The address of the token to send
-    // @param tokenOut The address of the token to receive
-    // @param amountIn The amount of the token to send
-    // @param minAmountOut The minimum amount of the token to receive
+    // @param tokenIn The encoded data for the token to send
+    // @param tokenOut The encoded data for the token to receive
     // @param receiver The address of the wallet that will receive the tokens
     // @param target The address of the target contract
     // @param data The call data to be sent to the target
     function safeRouteSingle(
-        IERC20 tokenIn,
-        IERC20 tokenOut,
-        uint256 amountIn,
-        uint256 minAmountOut,
+        Token calldata tokenIn,
+        Token calldata tokenOut,
         address receiver,
         address target,
         bytes calldata data
     ) external payable returns (bytes memory response) {
-        uint256 balance = tokenOut == _ETH ? receiver.balance : tokenOut.balanceOf(receiver);
-        response = routeSingle(tokenIn, amountIn, target, data);
-        uint256 amountOut;
-        if (tokenOut == _ETH) {
-            amountOut = receiver.balance - balance;
-        } else {
-            amountOut = tokenOut.balanceOf(receiver) - balance;
-        }
-        if (amountOut < minAmountOut) revert AmountTooLow(address(tokenOut));
+        uint256 balance = _balance(tokenOut, receiver);
+        response = routeSingle(tokenIn, target, data);
+        _checkMinAmountOut(tokenOut, receiver, balance);
     }
 
     // @notice Route multiple tokens via a call to an external contract and revert if there is insufficient tokens received
-    // @param tokensIn The addresses and amounts of the tokens to send
-    // @param tokensOut The addresses and minimum amounts of the tokens to receive
+    // @param tokensIn The encoded data for the tokens to send
+    // @param tokensOut The encoded data for the tokens to receive
     // @param receiver The address of the wallet that will receive the tokens
     // @param target The address of the target contract
     // @param data The call data to be sent to the target
@@ -108,25 +93,16 @@ contract EnsoRouter {
         bytes calldata data
     ) external payable returns (bytes memory response) {
         uint256 length = tokensOut.length;
-        uint256[] memory balances = new uint256[](length);
 
-        IERC20 tokenOut;
+        uint256[] memory balances = new uint256[](length);
         for (uint256 i; i < length; ++i) {
-            tokenOut = tokensOut[i].token;
-            balances[i] = tokenOut == _ETH ? receiver.balance : tokenOut.balanceOf(receiver);
+            balances[i] = _balance(tokensOut[i], receiver);
         }
 
         response = routeMulti(tokensIn, target, data);
 
-        uint256 amountOut;
         for (uint256 i; i < length; ++i) {
-            tokenOut = tokensOut[i].token;
-            if (tokenOut == _ETH) {
-                amountOut = receiver.balance - balances[i];
-            } else {
-                amountOut = tokenOut.balanceOf(receiver) - balances[i];
-            }
-            if (amountOut < tokensOut[i].amount) revert AmountTooLow(address(tokenOut));
+            _checkMinAmountOut(tokensOut[i], receiver, balances[i]);
         }
     }
 
@@ -146,5 +122,68 @@ contract EnsoRouter {
                 revert(add(response, 32), mload(response))
             }
         }
+    }
+
+    function _transfer(Token calldata token, address receiver) internal returns (bool isNativeAsset) {
+        TokenType tokenType = token.tokenType;
+
+        if (tokenType == TokenType.ERC20) {
+            (IERC20 erc20, uint256 amount) = abi.decode(token.data, (IERC20, uint256));
+            erc20.safeTransferFrom(msg.sender, receiver, amount);
+        } else if (tokenType == TokenType.Native) {
+            (uint256 amount) = abi.decode(token.data, (uint256));
+            if (msg.value != amount) revert WrongValue(msg.value, amount);
+            isNativeAsset = true;
+        } else if (tokenType == TokenType.ERC721) {
+            (IERC721 erc721, uint256 tokenId) = abi.decode(token.data, (IERC721, uint256));
+            erc721.safeTransferFrom(msg.sender, receiver, tokenId);
+        } else if (tokenType == TokenType.ERC1155) {
+            (IERC1155 erc1155, uint256 tokenId, uint256 amount) = abi.decode(token.data, (IERC1155, uint256, uint256));
+            erc1155.safeTransferFrom(msg.sender, receiver, tokenId, amount, "0x");
+        }
+    }
+
+    function _balance(Token calldata token, address receiver) internal view returns (uint256 balance) {
+        TokenType tokenType = token.tokenType;
+
+        if (tokenType == TokenType.ERC20) {
+            (IERC20 erc20, ) = abi.decode(token.data, (IERC20, uint256));
+            balance = erc20.balanceOf(receiver);
+        } else if (tokenType == TokenType.Native) {
+            balance = receiver.balance;
+        } else if (tokenType == TokenType.ERC721) {
+            (IERC721 erc721, ) = abi.decode(token.data, (IERC721, uint256));
+            balance = erc721.balanceOf(receiver);
+        } else if (tokenType == TokenType.ERC1155) {
+            (IERC1155 erc1155, uint256 tokenId, ) = abi.decode(token.data, (IERC1155, uint256, uint256));
+            balance = erc1155.balanceOf(receiver, tokenId);
+        }
+    }
+
+    function _checkMinAmountOut(Token calldata token, address receiver, uint256 prevBalance) internal view {
+        TokenType tokenType = token.tokenType;
+
+        uint256 balance;
+        uint256 minAmountOut;
+        if (tokenType == TokenType.ERC20) {
+            IERC20 erc20;
+            (erc20, minAmountOut) = abi.decode(token.data, (IERC20, uint256));
+            balance = erc20.balanceOf(receiver);
+        } else if (tokenType == TokenType.Native) {
+            (minAmountOut) = abi.decode(token.data, (uint256));
+            balance = receiver.balance;
+        } else if (tokenType == TokenType.ERC721) {
+            IERC721 erc721;
+            (erc721, minAmountOut) = abi.decode(token.data, (IERC721, uint256));
+            balance = erc721.balanceOf(receiver);
+        } else if (tokenType == TokenType.ERC1155) {
+            IERC1155 erc1155;
+            uint256 tokenId;
+            (erc1155, tokenId, minAmountOut) = abi.decode(token.data, (IERC1155, uint256, uint256));
+            balance = erc1155.balanceOf(receiver, tokenId);
+        }
+
+        uint256 amountOut = balance - prevBalance;
+        if (amountOut < minAmountOut) revert AmountTooLow(token);
     }
 }

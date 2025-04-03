@@ -69,7 +69,10 @@ contract EnsoRouterTest is Test {
 
         bytes memory data = abi.encodeWithSelector(shortcuts.executeShortcut.selector, bytes32(0), bytes32(0), commands, state);
 
-        router.safeRouteSingle(token, vault, AMOUNT, AMOUNT, address(this), address(shortcuts), data);
+        Token memory tokenIn = Token(TokenType.ERC20, abi.encode(address(token), AMOUNT));
+        Token memory tokenOut = Token(TokenType.ERC20, abi.encode(address(vault), AMOUNT));
+
+        router.safeRouteSingle(tokenIn, tokenOut, address(this), address(shortcuts), data);
         assertEq(AMOUNT, vault.balanceOf(address(this)));
     }
 
@@ -109,8 +112,11 @@ contract EnsoRouterTest is Test {
 
         bytes memory data = abi.encodeWithSelector(shortcuts.executeShortcut.selector, bytes32(0), bytes32(0), commands, state);
         
+        Token memory tokenIn = Token(TokenType.ERC20, abi.encode(address(token), AMOUNT));
+        Token memory tokenOut = Token(TokenType.ERC20, abi.encode(address(vault), AMOUNT));
+
         vm.expectRevert();
-        router.safeRouteSingle(token, vault, AMOUNT, AMOUNT, address(this), address(shortcuts), data);
+        router.safeRouteSingle(tokenIn, tokenOut, address(this), address(shortcuts), data);
     }
 
     function test_RevertWhen_VaultDepositNoTransfer() public {
@@ -143,8 +149,11 @@ contract EnsoRouterTest is Test {
 
         bytes memory data = abi.encodeWithSelector(shortcuts.executeShortcut.selector, bytes32(0), bytes32(0), commands, state);
 
+        Token memory tokenIn = Token(TokenType.ERC20, abi.encode(address(token), AMOUNT));
+        Token memory tokenOut = Token(TokenType.ERC20, abi.encode(address(vault), AMOUNT));
+
         vm.expectRevert();
-        router.safeRouteSingle(token, vault, AMOUNT, AMOUNT, address(this), address(shortcuts), data);
+        router.safeRouteSingle(tokenIn, tokenOut, address(this), address(shortcuts), data);
     }
 
     function testUnsafeVaultDepositNoTransfer() public {
@@ -177,7 +186,9 @@ contract EnsoRouterTest is Test {
 
         bytes memory data = abi.encodeWithSelector(shortcuts.executeShortcut.selector, bytes32(0), bytes32(0), commands, state);
 
-        router.routeSingle(token, AMOUNT, address(shortcuts), data);
+        Token memory tokenIn = Token(TokenType.ERC20, abi.encode(address(token), AMOUNT));
+
+        router.routeSingle(tokenIn, address(shortcuts), data);
         // Funds left in router's wallet!
         assertEq(AMOUNT, vault.balanceOf(address(shortcuts)));
     }
@@ -221,8 +232,8 @@ contract EnsoRouterTest is Test {
         bytes memory data = abi.encodeWithSelector(shortcuts.executeShortcut.selector, bytes32(0), bytes32(0), commands, state);
 
         Token[] memory tokensIn = new Token[](2);
-        tokensIn[0] = Token(token, AMOUNT);
-        tokensIn[1] = Token(IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE), 1);
+        tokensIn[0] = Token(TokenType.ERC20, abi.encode(address(token), AMOUNT));
+        tokensIn[1] = Token(TokenType.Native, abi.encode(uint256(1)));
 
         router.routeMulti{ value: 1 }(tokensIn, address(shortcuts), data);
         assertEq(AMOUNT, vault.balanceOf(address(this)));
@@ -267,11 +278,11 @@ contract EnsoRouterTest is Test {
         bytes memory data = abi.encodeWithSelector(shortcuts.executeShortcut.selector, bytes32(0), bytes32(0), commands, state);
 
         Token[] memory tokensIn = new Token[](2);
-        tokensIn[0] = Token(token, AMOUNT);
-        tokensIn[1] = Token(IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE), 1);
+        tokensIn[0] = Token(TokenType.ERC20, abi.encode(address(token), AMOUNT));
+        tokensIn[1] = Token(TokenType.Native, abi.encode(uint256(1)));
 
         Token[] memory tokensOut = new Token[](1);
-        tokensOut[0] = Token(IERC20(address(vault)), AMOUNT);
+        tokensOut[0] = Token(TokenType.ERC20, abi.encode(address(vault), AMOUNT));
 
         router.safeRouteMulti{ value: 1 }(tokensIn, tokensOut, address(this), address(shortcuts), data);
         assertEq(AMOUNT, vault.balanceOf(address(this)));
