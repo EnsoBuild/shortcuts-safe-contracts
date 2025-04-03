@@ -2,10 +2,10 @@
 pragma solidity ^0.8.28;
 
 import "forge-std/Script.sol";
-import "../src/router/EnsoRouter.sol";
+import "../src/router/EnsoShortcutRouter.sol";
 
 struct DeployerResult {
-    EnsoRouter router;
+    EnsoShortcutRouter router;
     EnsoShortcuts shortcuts;
 }
 
@@ -15,7 +15,7 @@ contract Deployer is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        result.router = new EnsoRouter{salt: "EnsoRouter"}();
+        result.router = new EnsoShortcutRouter{salt: "EnsoShortcutRouter"}();
         result.shortcuts = result.router.enso();
 
         vm.stopBroadcast();

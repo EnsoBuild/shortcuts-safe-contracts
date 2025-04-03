@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity ^0.8.28;
 
+import { EnsoShortcuts } from "../EnsoShortcuts.sol";
 import { SafeERC20, IERC20 } from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
 
 struct Token {
@@ -8,45 +9,58 @@ struct Token {
     uint256 amount;
 }
 
-contract EnsoRouter {
+contract EnsoShortcutRouter {
     using SafeERC20 for IERC20;
 
     IERC20 private constant _ETH = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+
+    EnsoShortcuts public immutable enso;
 
     error WrongValue(uint256 value, uint256 amount);
     error AmountTooLow(address token);
     error Duplicate(address token);
 
+    constructor() {
+        enso = new EnsoShortcuts(address(this));
+    }
 
-    // @notice Route a single token via a call to an external contract
+    // @notice Route a single token via an Enso Shortcut
+    // @param accountId The bytes32 value representing an API user
+    // @param requestId The bytes32 value representing an API request
     // @param tokenIn The address of the token to send
     // @param amountIn The amount of the token to send
-    // @param target The address of the target contract
-    // @param data The call data to be sent to the target
+    // @param commands An array of bytes32 values that encode calls
+    // @param state An array of bytes that are used to generate call data for each command
     function routeSingle(
+        bytes32 accountId,
+        bytes32 requestId,
         IERC20 tokenIn,
         uint256 amountIn,
-        address target,
-        bytes calldata data
-    ) public payable returns (bytes memory response) {
+        bytes32[] calldata commands,
+        bytes[] calldata state
+    ) public payable returns (bytes[] memory response) {
         if (tokenIn == _ETH) {
             if (msg.value != amountIn) revert WrongValue(msg.value, amountIn);
         } else {
             if (msg.value != 0) revert WrongValue(msg.value, 0);
-            tokenIn.safeTransferFrom(msg.sender, target, amountIn);
+            tokenIn.safeTransferFrom(msg.sender, address(enso), amountIn);
         }
-        response = _execute(target, msg.value, data);
+        response = enso.executeShortcut{value: msg.value}(accountId, requestId, commands, state);
     }
 
-    // @notice Route multiple tokens via a call to an external contract
+    // @notice Route multiple tokens via an Enso Shortcut
+    // @param accountId The bytes32 value representing an API user
+    // @param requestId The bytes32 value representing an API request
     // @param tokensIn The addresses and amounts of the tokens to send
-    // @param target The address of the target contract
-    // @param data The call data to be sent to the target
+    // @param commands An array of bytes32 values that encode calls
+    // @param state An array of bytes that are used to generate call data for each command
     function routeMulti(
+        bytes32 accountId,
+        bytes32 requestId,
         Token[] calldata tokensIn,
-        address target,
-        bytes calldata data
-    ) public payable returns (bytes memory response) {
+        bytes32[] calldata commands,
+        bytes[] calldata state
+    ) public payable returns (bytes[] memory response) {
         bool ethFlag;
         IERC20 tokenIn;
         uint256 amountIn;
@@ -58,33 +72,37 @@ contract EnsoRouter {
                 ethFlag = true;
                 if (msg.value != amountIn) revert WrongValue(msg.value, amountIn);
             } else {
-                tokenIn.safeTransferFrom(msg.sender, target, amountIn);
+                tokenIn.safeTransferFrom(msg.sender, address(enso), amountIn);
             }
         }
         if (!ethFlag && msg.value != 0) revert WrongValue(msg.value, 0);
         
-        response = _execute(target, msg.value, data);
+        response = enso.executeShortcut{value: msg.value}(accountId, requestId, commands, state);
     }
 
-    // @notice Route a single token via a call to an external contract and revert if there is insufficient token received
+    // @notice Route a single token via an Enso Shortcut and revert if there is insufficient token received
+    // @param accountId The bytes32 value representing an API user
+    // @param requestId The bytes32 value representing an API request
     // @param tokenIn The address of the token to send
     // @param tokenOut The address of the token to receive
     // @param amountIn The amount of the token to send
     // @param minAmountOut The minimum amount of the token to receive
     // @param receiver The address of the wallet that will receive the tokens
-    // @param target The address of the target contract
-    // @param data The call data to be sent to the target
+    // @param commands An array of bytes32 values that encode calls
+    // @param state An array of bytes that are used to generate call data for each command
     function safeRouteSingle(
+        bytes32 accountId,
+        bytes32 requestId,
         IERC20 tokenIn,
         IERC20 tokenOut,
         uint256 amountIn,
         uint256 minAmountOut,
         address receiver,
-        address target,
-        bytes calldata data
-    ) external payable returns (bytes memory response) {
+        bytes32[] calldata commands,
+        bytes[] calldata state
+    ) external payable returns (bytes[] memory response) {
         uint256 balance = tokenOut == _ETH ? receiver.balance : tokenOut.balanceOf(receiver);
-        response = routeSingle(tokenIn, amountIn, target, data);
+        response = routeSingle(accountId, requestId, tokenIn, amountIn, commands, state);
         uint256 amountOut;
         if (tokenOut == _ETH) {
             amountOut = receiver.balance - balance;
@@ -94,19 +112,23 @@ contract EnsoRouter {
         if (amountOut < minAmountOut) revert AmountTooLow(address(tokenOut));
     }
 
-    // @notice Route multiple tokens via a call to an external contract and revert if there is insufficient tokens received
+    // @notice Route multiple tokens via an Enso Shortcut and revert if there is insufficient tokens received
+    // @param accountId The bytes32 value representing an API user
+    // @param requestId The bytes32 value representing an API request
     // @param tokensIn The addresses and amounts of the tokens to send
     // @param tokensOut The addresses and minimum amounts of the tokens to receive
     // @param receiver The address of the wallet that will receive the tokens
-    // @param target The address of the target contract
-    // @param data The call data to be sent to the target
+    // @param commands An array of bytes32 values that encode calls
+    // @param state An array of bytes that are used to generate call data for each command
     function safeRouteMulti(
+        bytes32 accountId,
+        bytes32 requestId,
         Token[] calldata tokensIn,
         Token[] calldata tokensOut,
         address receiver,
-        address target,
-        bytes calldata data
-    ) external payable returns (bytes memory response) {
+        bytes32[] calldata commands,
+        bytes[] calldata state
+    ) external payable returns (bytes[] memory response) {
         uint256 length = tokensOut.length;
         uint256[] memory balances = new uint256[](length);
 
@@ -116,7 +138,7 @@ contract EnsoRouter {
             balances[i] = tokenOut == _ETH ? receiver.balance : tokenOut.balanceOf(receiver);
         }
 
-        response = routeMulti(tokensIn, target, data);
+        response = routeMulti(accountId, requestId, tokensIn, commands, state);
 
         uint256 amountOut;
         for (uint256 i; i < length; ++i) {
@@ -127,24 +149,6 @@ contract EnsoRouter {
                 amountOut = tokenOut.balanceOf(receiver) - balances[i];
             }
             if (amountOut < tokensOut[i].amount) revert AmountTooLow(address(tokenOut));
-        }
-    }
-
-    // @notice A function to execute an arbitrary call on another contract
-    // @param target The address of the target contract
-    // @param value The ether value that is to be sent with the call
-    // @param data The call data to be sent to the target
-    function _execute(
-        address target,
-        uint256 value,
-        bytes calldata data
-    ) internal returns (bytes memory response) {
-        bool success;
-        (success, response) = target.call{value: value}(data);
-        if (!success) {
-            assembly{
-                revert(add(response, 32), mload(response))
-            }
         }
     }
 }

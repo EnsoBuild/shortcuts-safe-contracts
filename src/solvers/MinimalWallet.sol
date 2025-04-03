@@ -248,5 +248,5 @@ contract MinimalWallet is ERC721Holder, ERC1155Holder {
     // Fallback functions //////////////////////////////
     ////////////////////////////////////////////////////
 
-    receive() external payable {}
+    receive() external virtual payable {}
 }

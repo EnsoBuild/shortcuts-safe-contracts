@@ -22,10 +22,12 @@ contract BebopSolver is BaseSolver {
     }
 
     // @notice Executes a series of pre-encoded commands (shortcuts) on behalf of a solver.
-    // @param requestId A unique identifier (bytes32) used to correlate the current request with a previously provided quote.
+    // @param accountId The bytes32 value representing an API user
+    // @param requestId The bytes32 value representing an API request
     // @param commands An array of bytes32 values that encode calls
     // @param state An array of bytes that are used to generate call data for each command
     function executeShortcut(
+        bytes32 accountId,
         bytes32 requestId,
         bytes32[] calldata commands,
         bytes[] calldata state
@@ -33,6 +35,6 @@ contract BebopSolver is BaseSolver {
         if (relayer != tx.origin) {
             revert NotPermitted();
         }
-        return super.executeShortcut(requestId, commands, state);
+        return super.executeShortcut(accountId, requestId, commands, state);
     }
 }
