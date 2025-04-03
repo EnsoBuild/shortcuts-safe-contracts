@@ -20,9 +20,10 @@ struct Token {
 contract EnsoRouter {
     using SafeERC20 for IERC20;
 
-    error WrongValue(uint256 value, uint256 amount);
-    error AmountTooLow(Token token);
-    error Duplicate();
+    error WrongMsgValue(uint256 value, uint256 expectedAmount);
+    error AmountTooLow(Token token, uint256 amount, uint256 minAmount);
+    error DuplicateNativeAsset();
+    error UnsupportedTokenType(TokenType tokenType);
 
     // @notice Route a single token via a call to an external contract
     // @param tokenIn The encoded data for the token to send
@@ -34,7 +35,7 @@ contract EnsoRouter {
         bytes calldata data
     ) public payable returns (bytes memory response) {
         bool isNativeAsset = _transfer(tokenIn, target);
-        if (!isNativeAsset && msg.value != 0) revert WrongValue(msg.value, 0);
+        if (!isNativeAsset && msg.value != 0) revert WrongMsgValue(msg.value, 0);
         response = _execute(target, msg.value, data);
     }
 
@@ -47,16 +48,14 @@ contract EnsoRouter {
         address target,
         bytes calldata data
     ) public payable returns (bytes memory response) {
-        uint256 length = tokensIn.length;
-
         bool isNativeAsset;
-        for (uint256 i; i < length; ++i) {
+        for (uint256 i; i < tokensIn.length; ++i) {
             if (_transfer(tokensIn[i], target)) {
-                if (isNativeAsset) revert Duplicate(); // Native asset can only be included once
+                if (isNativeAsset) revert DuplicateNativeAsset(); // Native asset can only be included once
                 isNativeAsset = true;
             }
         }
-        if (!isNativeAsset && msg.value != 0) revert WrongValue(msg.value, 0);
+        if (!isNativeAsset && msg.value != 0) revert WrongMsgValue(msg.value, 0);
         
         response = _execute(target, msg.value, data);
     }
@@ -92,16 +91,14 @@ contract EnsoRouter {
         address target,
         bytes calldata data
     ) external payable returns (bytes memory response) {
-        uint256 length = tokensOut.length;
-
-        uint256[] memory balances = new uint256[](length);
-        for (uint256 i; i < length; ++i) {
+        uint256[] memory balances = new uint256[](tokensOut.length);
+        for (uint256 i; i < tokensOut.length; ++i) {
             balances[i] = _balance(tokensOut[i], receiver);
         }
 
         response = routeMulti(tokensIn, target, data);
 
-        for (uint256 i; i < length; ++i) {
+        for (uint256 i; i < tokensOut.length; ++i) {
             _checkMinAmountOut(tokensOut[i], receiver, balances[i]);
         }
     }
@@ -132,7 +129,7 @@ contract EnsoRouter {
             erc20.safeTransferFrom(msg.sender, receiver, amount);
         } else if (tokenType == TokenType.Native) {
             (uint256 amount) = abi.decode(token.data, (uint256));
-            if (msg.value != amount) revert WrongValue(msg.value, amount);
+            if (msg.value != amount) revert WrongMsgValue(msg.value, amount);
             isNativeAsset = true;
         } else if (tokenType == TokenType.ERC721) {
             (IERC721 erc721, uint256 tokenId) = abi.decode(token.data, (IERC721, uint256));
@@ -140,6 +137,8 @@ contract EnsoRouter {
         } else if (tokenType == TokenType.ERC1155) {
             (IERC1155 erc1155, uint256 tokenId, uint256 amount) = abi.decode(token.data, (IERC1155, uint256, uint256));
             erc1155.safeTransferFrom(msg.sender, receiver, tokenId, amount, "0x");
+        } else {
+            revert UnsupportedTokenType(tokenType);
         }
     }
 
@@ -157,6 +156,8 @@ contract EnsoRouter {
         } else if (tokenType == TokenType.ERC1155) {
             (IERC1155 erc1155, uint256 tokenId, ) = abi.decode(token.data, (IERC1155, uint256, uint256));
             balance = erc1155.balanceOf(receiver, tokenId);
+        } else {
+            revert UnsupportedTokenType(tokenType);
         }
     }
 
@@ -181,9 +182,11 @@ contract EnsoRouter {
             uint256 tokenId;
             (erc1155, tokenId, minAmountOut) = abi.decode(token.data, (IERC1155, uint256, uint256));
             balance = erc1155.balanceOf(receiver, tokenId);
+        } else {
+            revert UnsupportedTokenType(tokenType);
         }
 
         uint256 amountOut = balance - prevBalance;
-        if (amountOut < minAmountOut) revert AmountTooLow(token);
+        if (amountOut < minAmountOut) revert AmountTooLow(token, amountOut, minAmountOut);
     }
 }
