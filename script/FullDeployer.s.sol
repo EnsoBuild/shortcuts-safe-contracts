@@ -2,7 +2,8 @@
 pragma solidity ^0.8.28;
 
 import "forge-std/Script.sol";
-import "../src/router/EnsoShortcutRouter.sol";
+import "../src/EnsoShortcuts.sol";
+import "../src/router/EnsoRouter.sol";
 import "../src/delegate/DelegateEnsoShortcuts.sol";
 import "../src/helpers/DecimalHelpers.sol";
 import "../src/helpers/EnsoShortcutsHelpers.sol";
@@ -14,7 +15,7 @@ import {SwapHelpers} from "../src/helpers/SwapHelpers.sol";
 import "../src/helpers/TupleHelpers.sol";
 
 struct DeployerResult {
-    EnsoShortcutRouter router;
+    EnsoRouter router;
     EnsoShortcuts shortcuts;
     DelegateEnsoShortcuts delegate;
     DecimalHelpers decimalHelpers;
@@ -27,14 +28,14 @@ struct DeployerResult {
     TupleHelpers tupleHelpers;
 }
 
-contract FullDeploy is Script {
+contract FullDeployer is Script {
     function run() public returns (DeployerResult memory result) {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
         vm.startBroadcast(deployerPrivateKey);
 
-        result.router = new EnsoShortcutRouter{salt: "EnsoShortcutRouter"}();
-        result.shortcuts = result.router.enso();
+        result.router = new EnsoRouter{salt: "EnsoRouter"}();
+        result.shortcuts = new EnsoShortcuts{salt: "EnsoShortcuts"}(address(result.router));
         result.delegate = new DelegateEnsoShortcuts{salt: "DelegateEnsoShortcuts"}();
 
         result.decimalHelpers = new DecimalHelpers{salt: "DecimalHelpers"}();
