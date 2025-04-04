@@ -37,7 +37,7 @@ contract EnsoRouterTest is Test, ERC721Holder, ERC1155Holder {
         _ethereumFork = vm.createFork(_rpcURL);
         vm.selectFork(_ethereumFork);
         router = new EnsoRouter();
-        shortcuts = new EnsoShortcuts(address(router));
+        shortcuts = EnsoShortcuts(payable(router.shortcuts()));
         token = new MockERC20("Test", "TST");
         nft = new MockERC721("NFT", "NFT");
         multiToken = new MockERC1155("Multi");
@@ -90,7 +90,7 @@ contract EnsoRouterTest is Test, ERC721Holder, ERC1155Holder {
         Token memory tokenIn = Token(TokenType.ERC20, abi.encode(address(token), AMOUNT));
         Token memory tokenOut = Token(TokenType.ERC20, abi.encode(address(vault), AMOUNT));
 
-        router.safeRouteSingle(tokenIn, tokenOut, address(this), address(shortcuts), data);
+        router.safeRouteSingle(tokenIn, tokenOut, address(this), data);
         assertEq(AMOUNT, vault.balanceOf(address(this)));
     }
 
@@ -134,7 +134,7 @@ contract EnsoRouterTest is Test, ERC721Holder, ERC1155Holder {
         Token memory tokenOut = Token(TokenType.ERC20, abi.encode(address(vault), AMOUNT));
 
         vm.expectRevert();
-        router.safeRouteSingle(tokenIn, tokenOut, address(this), address(shortcuts), data);
+        router.safeRouteSingle(tokenIn, tokenOut, address(this), data);
     }
 
     function test_RevertWhen_VaultDepositNoTransfer() public {
@@ -171,7 +171,7 @@ contract EnsoRouterTest is Test, ERC721Holder, ERC1155Holder {
         Token memory tokenOut = Token(TokenType.ERC20, abi.encode(address(vault), AMOUNT));
 
         vm.expectRevert();
-        router.safeRouteSingle(tokenIn, tokenOut, address(this), address(shortcuts), data);
+        router.safeRouteSingle(tokenIn, tokenOut, address(this), data);
     }
 
     function testUnsafeVaultDepositNoTransfer() public {
@@ -206,7 +206,7 @@ contract EnsoRouterTest is Test, ERC721Holder, ERC1155Holder {
 
         Token memory tokenIn = Token(TokenType.ERC20, abi.encode(address(token), AMOUNT));
 
-        router.routeSingle(tokenIn, address(shortcuts), data);
+        router.routeSingle(tokenIn, data);
         // Funds left in router's wallet!
         assertEq(AMOUNT, vault.balanceOf(address(shortcuts)));
     }
@@ -253,7 +253,7 @@ contract EnsoRouterTest is Test, ERC721Holder, ERC1155Holder {
         tokensIn[0] = Token(TokenType.ERC20, abi.encode(address(token), AMOUNT));
         tokensIn[1] = Token(TokenType.Native, abi.encode(uint256(1)));
 
-        router.routeMulti{ value: 1 }(tokensIn, address(shortcuts), data);
+        router.routeMulti{ value: 1 }(tokensIn, data);
         assertEq(AMOUNT, vault.balanceOf(address(this)));
     }
 
@@ -302,7 +302,7 @@ contract EnsoRouterTest is Test, ERC721Holder, ERC1155Holder {
         Token[] memory tokensOut = new Token[](1);
         tokensOut[0] = Token(TokenType.ERC20, abi.encode(address(vault), AMOUNT));
 
-        router.safeRouteMulti{ value: 1 }(tokensIn, tokensOut, address(this), address(shortcuts), data);
+        router.safeRouteMulti{ value: 1 }(tokensIn, tokensOut, address(this), data);
         assertEq(AMOUNT, vault.balanceOf(address(this)));
     }
 
@@ -348,7 +348,7 @@ contract EnsoRouterTest is Test, ERC721Holder, ERC1155Holder {
         Token memory tokenIn = Token(TokenType.ERC721, abi.encode(address(nft), TOKENID));
         Token memory tokenOut = Token(TokenType.ERC721, abi.encode(address(nftVault), 1)); // token out is checking for balance, which should increase by 1
 
-        router.safeRouteSingle(tokenIn, tokenOut, address(this), address(shortcuts), data);
+        router.safeRouteSingle(tokenIn, tokenOut, address(this), data);
         assertEq(1, nftVault.balanceOf(address(this)));
     }
 
@@ -397,7 +397,7 @@ contract EnsoRouterTest is Test, ERC721Holder, ERC1155Holder {
         Token memory tokenIn = Token(TokenType.ERC1155, abi.encode(address(multiToken), TOKENID, AMOUNT));
         Token memory tokenOut = Token(TokenType.ERC1155, abi.encode(address(multiVault), TOKENID, AMOUNT));
 
-        router.safeRouteSingle(tokenIn, tokenOut, address(this), address(shortcuts), data);
+        router.safeRouteSingle(tokenIn, tokenOut, address(this), data);
         assertEq(AMOUNT, multiVault.balanceOf(address(this), TOKENID));
     }
 }

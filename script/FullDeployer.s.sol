@@ -35,7 +35,7 @@ contract FullDeployer is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         result.router = new EnsoRouter{salt: "EnsoRouter"}();
-        result.shortcuts = new EnsoShortcuts{salt: "EnsoShortcuts"}(address(result.router));
+        result.shortcuts = EnsoShortcuts(payable(result.router.shortcuts()));
         result.delegate = new DelegateEnsoShortcuts{salt: "DelegateEnsoShortcuts"}();
 
         result.decimalHelpers = new DecimalHelpers{salt: "DecimalHelpers"}();
